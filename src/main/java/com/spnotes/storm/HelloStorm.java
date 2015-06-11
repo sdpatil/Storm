@@ -1,4 +1,5 @@
 package com.spnotes.storm;
+import backtype.storm.tuple.Fields;
 import com.spnotes.storm.bolts.WordCounterBolt;
 import com.spnotes.storm.bolts.WordSpitterBolt;
 import com.spnotes.storm.spouts.LineReaderSpout;
@@ -18,9 +19,9 @@ public class HelloStorm {
 		
 		TopologyBuilder builder = new TopologyBuilder();
 		builder.setSpout("line-reader-spout", new LineReaderSpout());
-		builder.setBolt("word-spitter", new WordSpitterBolt()).shuffleGrouping("line-reader-spout");
-		builder.setBolt("word-counter", new WordCounterBolt()).shuffleGrouping("word-spitter");
-		
+		builder.setBolt("word-spitter", new WordSpitterBolt()).shuffleGrouping("line-reader-spout").setNumTasks(10).setMaxTaskParallelism(10);
+		builder.setBolt("word-counter", new WordCounterBolt()).fieldsGrouping("word-spitter", new Fields("word")).setNumTasks(10).setMaxTaskParallelism(10);
+
 		LocalCluster cluster = new LocalCluster();
 		cluster.submitTopology("HelloStorm", config, builder.createTopology());
 		Thread.sleep(10000);
